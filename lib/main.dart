@@ -30,7 +30,14 @@ void main() async {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
 
-      await NotificationManager.initialize();
+      String? notificationError;
+      try {
+        await NotificationManager.initialize();
+      } catch (e, stack) {
+        debugPrint('Notification initialization error: $e');
+        debugPrint('Stack trace: $stack');
+        notificationError = 'Notifications failed to initialize';
+      }
 
       // Initialize Dependency Injection
       await configureDependencies();
@@ -41,6 +48,9 @@ void main() async {
 
       // Initialize services with proper error tracking
       final List<String> initErrors = [];
+      if (notificationError != null) {
+        initErrors.add(notificationError);
+      }
 
       // Critical services - track errors
       try {
@@ -83,12 +93,8 @@ void main() async {
       runApp(
         MultiProvider(
           providers: [
-            ChangeNotifierProvider.value(
-              value: queueService,
-            ),
-            ChangeNotifierProvider.value(
-              value: settingsService,
-            ),
+            ChangeNotifierProvider.value(value: queueService),
+            ChangeNotifierProvider.value(value: settingsService),
           ],
           child: const MyApp(),
         ),
