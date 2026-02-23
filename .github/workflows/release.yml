@@ -76,6 +76,15 @@ jobs:
           dart pub global activate fastforge
           echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
 
+      - name: Install appimagetool (Linux packaging)
+        if: matrix.id == 'linux'
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -L -o "$HOME/.local/bin/appimagetool" https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x "$HOME/.local/bin/appimagetool"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Configure Android signing (stable only)
         if: startsWith(matrix.id, 'android-')
         shell: bash

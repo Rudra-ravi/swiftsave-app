@@ -10,6 +10,9 @@
 - If a fix touches Android Gradle config, then run both `./gradlew :app:compileDebugKotlin` and `./gradlew :app:assembleDebug` before claiming success.
 - If `dart analyze` and `flutter test` pass, then still run one Android build gate to catch plugin JVM-target mismatches.
 
+### Release Packaging
+- If Linux release packaging uses Fastforge AppImage targets, then ensure `appimagetool` is installed on CI and available on `PATH` before running `fastforge package`.
+
 ### Gradle Safety
 - If aligning Java/Kotlin targets across plugins, then avoid `Project.afterEvaluate` hooks and use project-safe configuration timing (`gradle.projectsEvaluated` or lazy task configuration).
 
