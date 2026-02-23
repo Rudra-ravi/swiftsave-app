@@ -167,9 +167,9 @@ jobs:
               fastforge package --platform linux --targets deb
               fastforge package --platform linux --targets rpm
 
-              APPIMAGE_FILE="$(find dist -maxdepth 1 -type f -name '*.AppImage' -print -quit)"
-              DEB_FILE="$(find dist -maxdepth 1 -type f -name '*.deb' -print -quit)"
-              RPM_FILE="$(find dist -maxdepth 1 -type f -name '*.rpm' -print -quit)"
+              APPIMAGE_FILE="$(find dist -type f -name '*.AppImage' | head -n1)"
+              DEB_FILE="$(find dist -type f -name '*.deb' | head -n1)"
+              RPM_FILE="$(find dist -type f -name '*.rpm' | head -n1)"
 
               if [ -z "$APPIMAGE_FILE" ] || [ -z "$DEB_FILE" ] || [ -z "$RPM_FILE" ]; then
                 echo "Missing one or more Linux packages (AppImage/DEB/RPM)." && exit 1
