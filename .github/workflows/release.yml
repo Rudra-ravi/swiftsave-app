@@ -165,7 +165,8 @@ jobs:
                 echo "Skipping macOS signing/notarization for RC or missing secrets"
               fi
 
-              (cd "$(dirname "$APP_BUNDLE")" && zip -r "../../../dist/${APP_NAME}-${TAG}-macos.zip" "$(basename "$APP_BUNDLE")")
+              ZIP_PATH="${GITHUB_WORKSPACE}/dist/${APP_NAME}-${TAG}-macos.zip"
+              (cd "$(dirname "$APP_BUNDLE")" && zip -r "$ZIP_PATH" "$(basename "$APP_BUNDLE")")
 
               DMG_PATH="dist/${APP_NAME}-${TAG}-macos.dmg"
               hdiutil create -volname "${APP_NAME}" -srcfolder "$APP_BUNDLE" -ov -format UDZO "$DMG_PATH"
