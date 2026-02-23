@@ -1,0 +1,310 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.id }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: android-apk
+            os: ubuntu-latest
+          - id: android-aab
+            os: ubuntu-latest
+          - id: linux
+            os: ubuntu-latest
+          - id: windows
+            os: windows-latest
+          - id: macos
+            os: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set metadata
+        shell: bash
+        run: |
+          echo "TAG=${GITHUB_REF_NAME:-manual}" >> "$GITHUB_ENV"
+          APP_NAME="$(grep -E '^name:' pubspec.yaml | head -n1 | awk '{print $2}')"
+          if [ -z "$APP_NAME" ]; then APP_NAME="flutter_app"; fi
+          echo "APP_NAME=$APP_NAME" >> "$GITHUB_ENV"
+          if [[ "$GITHUB_REF_NAME" == *-rc.* ]]; then
+            echo "IS_RC=true" >> "$GITHUB_ENV"
+          else
+            echo "IS_RC=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Set up Java 17
+        if: startsWith(matrix.id, 'android-')
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Install Linux desktop dependencies
+        if: matrix.id == 'linux'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build libgtk-3-dev appstream fuse libfuse2
+
+      - name: Configure Android signing (stable only)
+        if: startsWith(matrix.id, 'android-')
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ "${IS_RC}" = "true" ]; then
+            echo "RC build: allowing debug/fallback signing"
+            exit 0
+          fi
+
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
+            echo "Stable release requires Android signing secrets"
+            exit 1
+          fi
+
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/upload-keystore.jks
+          cat > android/key.properties <<PROPS
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=../upload-keystore.jks
+          PROPS
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Build Android APK
+        if: matrix.id == 'android-apk'
+        run: flutter build apk --release
+
+      - name: Build Android AAB
+        if: matrix.id == 'android-aab'
+        run: flutter build appbundle --release
+
+      - name: Build Linux
+        if: matrix.id == 'linux'
+        run: flutter build linux --release
+
+      - name: Build Windows
+        if: matrix.id == 'windows'
+        run: flutter build windows --release
+
+      - name: Build macOS
+        if: matrix.id == 'macos'
+        run: flutter build macos --release
+
+      - name: Package (Unix)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        env:
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          MACOS_APPLE_ID: ${{ secrets.MACOS_APPLE_ID }}
+          MACOS_APP_PASSWORD: ${{ secrets.MACOS_APP_PASSWORD }}
+          MACOS_TEAM_ID: ${{ secrets.MACOS_TEAM_ID }}
+        run: |
+          mkdir -p dist
+          case "${{ matrix.id }}" in
+            android-apk)
+              cp build/app/outputs/flutter-apk/app-release.apk "dist/${APP_NAME}-${TAG}-android.apk"
+              ;;
+            android-aab)
+              cp build/app/outputs/bundle/release/app-release.aab "dist/${APP_NAME}-${TAG}-android.aab"
+              ;;
+            linux)
+              tar -czf "dist/${APP_NAME}-${TAG}-linux.tar.gz" -C build/linux/x64/release/bundle .
+
+              # Best-effort AppImage packaging (optional)
+              curl -L -o appimagetool.AppImage https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+              chmod +x appimagetool.AppImage
+              mkdir -p AppDir/usr/bin
+              cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
+              if ./appimagetool.AppImage AppDir "dist/${APP_NAME}-${TAG}.AppImage"; then
+                echo "AppImage created"
+              else
+                echo "AppImage generation failed, continuing with tar.gz"
+              fi
+              ;;
+            macos)
+              APP_BUNDLE="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' -print -quit)"
+              if [ -z "$APP_BUNDLE" ]; then
+                echo "No .app found in macOS build output" && exit 1
+              fi
+
+              # Stable-only optional signing/notarization
+              SHOULD_NOTARIZE=false
+              if [ "${IS_RC}" = "false" ] && [ -n "$MACOS_SIGN_IDENTITY" ] && [ -n "$MACOS_APPLE_ID" ] && [ -n "$MACOS_APP_PASSWORD" ] && [ -n "$MACOS_TEAM_ID" ]; then
+                codesign --deep --force --options runtime --sign "$MACOS_SIGN_IDENTITY" "$APP_BUNDLE"
+                SHOULD_NOTARIZE=true
+              else
+                echo "Skipping macOS signing/notarization for RC or missing secrets"
+              fi
+
+              (cd "$(dirname "$APP_BUNDLE")" && zip -r "../../../dist/${APP_NAME}-${TAG}-macos.zip" "$(basename "$APP_BUNDLE")")
+
+              DMG_PATH="dist/${APP_NAME}-${TAG}-macos.dmg"
+              hdiutil create -volname "${APP_NAME}" -srcfolder "$APP_BUNDLE" -ov -format UDZO "$DMG_PATH"
+
+              if [ "$SHOULD_NOTARIZE" = "true" ]; then
+                xcrun notarytool submit "$DMG_PATH" \
+                  --apple-id "$MACOS_APPLE_ID" \
+                  --password "$MACOS_APP_PASSWORD" \
+                  --team-id "$MACOS_TEAM_ID" \
+                  --wait
+                xcrun stapler staple "$DMG_PATH"
+              fi
+              ;;
+          esac
+
+      - name: Package (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $tag = "${env:TAG}"
+          $app = "${env:APP_NAME}"
+
+          $releaseDir = Get-ChildItem -Directory -Recurse build/windows |
+            Where-Object { $_.FullName -match 'runner\\Release$' } |
+            Select-Object -First 1
+          if (-not $releaseDir) { throw "Windows Release dir not found" }
+
+          $portable = "dist\\${app}-${tag}-windows.zip"
+          if (Test-Path $portable) { Remove-Item $portable -Force }
+          Compress-Archive -Path "$($releaseDir.FullName)\\*" -DestinationPath $portable
+
+          choco install innosetup --no-progress -y
+          $iss = @"
+          [Setup]
+          AppName=$app
+          AppVersion=$tag
+          DefaultDirName={autopf}\\$app
+          OutputDir=dist
+          OutputBaseFilename=${app}-${tag}-windows-installer
+          Compression=lzma
+          SolidCompression=yes
+
+          [Files]
+          Source: "$($releaseDir.FullName)\\*"; DestDir: "{app}"; Flags: recursesubdirs
+
+          [Icons]
+          Name: "{group}\\$app"; Filename: "{app}\\$app.exe"
+          "@
+          Set-Content -Path installer.iss -Value $iss
+          iscc installer.iss
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.id }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: dist
+          pattern: dist-*
+          merge-multiple: true
+
+      - name: Build tool manifest + checksums
+        shell: bash
+        run: |
+          mkdir -p dist/tool-bundles
+          if [ -d tool-bundles ]; then
+            cp -r tool-bundles/* dist/tool-bundles/ || true
+          fi
+
+          find dist -maxdepth 1 -type f -print0 | xargs -0 -I{} sh -c 'sha256sum "{}" > "{}.sha256"'
+          if [ -d dist/tool-bundles ]; then
+            find dist/tool-bundles -type f ! -name '*.sha256' -print0 | xargs -0 -I{} sh -c 'sha256sum "{}" > "{}.sha256"'
+          fi
+
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path('dist/tool-bundles')
+          repo = os.environ.get("GITHUB_REPOSITORY", "")
+          ref_name = os.environ.get("GITHUB_REF_NAME", "")
+          manifest = {
+              "generatedAt": os.popen("date -u +%Y-%m-%dT%H:%M:%SZ").read().strip(),
+              "minimumAppVersion": "1.0.0",
+              "platforms": {}
+          }
+
+          for platform in ('linux', 'windows', 'macos'):
+              pdir = root / platform
+              if not pdir.exists():
+                  continue
+              tools = {}
+              for file in pdir.iterdir():
+                  if file.is_file() and not file.name.endswith('.sha256'):
+                      sha_file = file.with_suffix(file.suffix + '.sha256')
+                      sha = sha_file.read_text().split()[0] if sha_file.exists() else ""
+                      tools[file.stem] = {
+                          "fileName": file.name,
+                          "url": f"https://github.com/{repo}/releases/download/{ref_name}/tool-bundles/{platform}/{file.name}",
+                          "sha256": sha,
+                          "executable": True,
+                      }
+              if tools:
+                  manifest["platforms"][platform] = {
+                      "version": ref_name,
+                      "tools": tools,
+                  }
+
+          Path('dist/tools-manifest.json').write_text(json.dumps(manifest, indent=2))
+          PY
+
+      - name: Create / update release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.apk
+            dist/*.aab
+            dist/*.tar.gz
+            dist/*.AppImage
+            dist/*.zip
+            dist/*.dmg
+            dist/*.exe
+            dist/*.sha256
+            dist/tools-manifest.json
+            dist/tool-bundles/**/*
+          generate_release_notes: true
+          make_latest: true
+          prerelease: ${{ contains(github.ref_name, '-rc.') }}

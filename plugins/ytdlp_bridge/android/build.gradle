@@ -1,0 +1,76 @@
+group = "com.example.ytdlp_bridge"
+version = "1.0-SNAPSHOT"
+
+buildscript {
+    ext.kotlin_version = "2.1.20"  // Updated from 1.9.0
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://chaquo.com/maven" }
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.9.1")  // Updated from 8.1.1
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
+        classpath "com.chaquo.python:gradle:17.0.0"  // Keep at 17.0.0
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://chaquo.com/maven" }
+    }
+}
+
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+apply plugin: "com.chaquo.python"
+
+android {
+    namespace = "com.example.ytdlp_bridge"
+
+    compileSdk = 35  // Updated from 34 (Android 15)
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    sourceSets {
+        main.java.srcDirs += "src/main/kotlin"
+        test.java.srcDirs += "src/test/kotlin"
+    }
+
+    defaultConfig {
+        minSdk = 24
+        ndk {
+            abiFilters "arm64-v8a", "x86_64"
+        }
+    }
+
+    dependencies {
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")  // Updated from 1.7.3
+        testImplementation("org.jetbrains.kotlin:kotlin-test")
+        testImplementation("org.mockito:mockito-core:5.14.2")  // Updated from 5.0.0
+    }
+}
+
+chaquopy {
+    defaultConfig {
+        version "3.12"
+        pip {
+            install "yt-dlp>=2025.12.08"  // Use >= to allow automatic updates
+        }
+    }
+    sourceSets {
+        main {
+            srcDir "src/main/python"
+        }
+    }
+}

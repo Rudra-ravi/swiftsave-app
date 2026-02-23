@@ -1,0 +1,221 @@
+{
+  "appTitle": "SwiftSave",
+  "enterUrl": "Enter Video URL",
+  "fetchInfo": "Fetch Video Info",
+  "downloadVideo": "Download Video",
+  "downloadAudio": "Download Audio Only",
+  "downloading": "Downloading...",
+  "completed": "Completed",
+  "error": "Error",
+  "queue": "Download Queue",
+  "playlist": "Playlist",
+  "settings": "Settings",
+  "theme": "Theme",
+  "language": "Language",
+  "systemTheme": "System Default",
+  "lightTheme": "Light Mode",
+  "darkTheme": "Dark Mode",
+  "bestQuality": "Best Quality (Recommended)",
+  "audioOnly": "Audio Only",
+  "videoFormats": "Video Formats",
+  "storagePermissionRequired": "Storage permission is required to download videos",
+  "downloadStarted": "Download started",
+  "downloadCompleted": "Download completed",
+  "downloadFailed": "Download failed",
+  "noFormats": "No formats found",
+  "urlHint": "https://youtube.com/watch?v=...",
+  "pasteLink": "Paste Link",
+  "clear": "Clear",
+  "processing": "Processing...",
+  "cancel": "Cancel",
+  "retry": "Retry",
+  "remove": "Remove",
+  "play": "Play",
+  "pause": "Pause",
+  "openFile": "Open File",
+  "recentLinks": "Recent Links",
+  "supportedSites": "Supported Sites",
+  "searchDownloads": "Search",
+  "filterAll": "All",
+  "filterActive": "Active",
+  "filterErrors": "Errors",
+  "downloads": "Downloads",
+  "wifiOnlyDownloads": "Wi-Fi only downloads",
+  "saveToGallery": "Save to Gallery",
+  "maxConcurrentDownloads": "Max concurrent downloads",
+  "downloadLocation": "Download location",
+  "waitingForWifi": "Waiting for Wi-Fi",
+  "retryAll": "Retry all",
+  "noResults": "No results",
+  "noDownloadsYet": "No downloads yet",
+  "addVideosToStart": "Add videos to start downloading",
+  "cancelDownload": "Cancel Download?",
+  "cancelDownloadMessage": "Are you sure you want to cancel this download?",
+  "imageUnavailable": "Image unavailable",
+  "invalidUrl": "Please enter a valid URL",
+  "gallery": "Gallery",
+  "galleryItems": "{count} items",
+  "@galleryItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadAll": "Download All",
+  "selectItems": "Select Items",
+  "chooseItemsToDownload": "Choose which items to download",
+  "downloadGallery": "Download Gallery",
+  "downloadImage": "Download Image",
+  "downloadAudioFile": "Download Audio",
+  "addToQueue": "Add to Queue",
+  "about": "About",
+  "builtWithFlutter": "Built with Flutter & Python",
+  "poweredByYtdlp": "Powered by yt-dlp",
+  "initializationError": "Initialization Error",
+  "servicesFailed": "Some services failed to start",
+  "continueAnyway": "Continue Anyway",
+  "addedVideosToQueue": "Added {count} videos to queue",
+  "@addedVideosToQueue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bestAvailableVideo": "Best available video",
+  "preset1080": "1080p",
+  "preset720": "720p",
+  "fallbackToBest": "Fallback to best",
+  "progressiveFormat": "Progressive format",
+  "smallerFileAudioOnly": "Smaller file, audio only",
+  "hideAdvanced": "Hide advanced",
+  "advanced": "Advanced",
+  "clearErrors": "Clear errors",
+  "removedErrors": "Removed {count} errors",
+  "@removedErrors": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sort": "Sort",
+  "sortNewest": "Newest",
+  "sortOldest": "Oldest",
+  "sortStatus": "Status",
+  "enableSetting": "On",
+  "disableSetting": "Off",
+  "downloadAnyNetwork": "Downloads on any network",
+  "defaultDownloadPath": "Use app default folder",
+  "cookieSettings": "Cookie session",
+  "cookiesActive": "Cookies active ({browser})",
+  "@cookiesActive": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
+  "cookiesImported": "Imported cookies from {browser}",
+  "@cookiesImported": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
+  "cookiesImportFailed": "Failed to import cookies from {browser}",
+  "@cookiesImportFailed": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownBrowser": "Unknown browser",
+  "noCookiesImported": "No cookies imported",
+  "importBrowserCookies": "Import browser cookies",
+  "clearCookies": "Clear cookies",
+  "cookiesCleared": "Cookies cleared",
+  "advancedSettings": "Advanced Settings",
+  "advancedSettingsSubtitle": "Quality, concurrent downloads, proxy...",
+  "downloadPathHint": "/storage/emulated/0/Download",
+  "downloadPathHelper": "Leave empty to use default",
+  "resetToDefault": "Reset",
+  "saveSetting": "Save",
+  "waitingInQueue": "Waiting in queue...",
+  "cancelled": "Cancelled",
+  "etaShort": "ETA",
+  "itemsProgress": "{current}/{total} items",
+  "@itemsProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "buttonPasteLink": "Paste a Link",
+  "buttonDownload": "Download",
+  "buttonGettingInfo": "Getting info...",
+  "buttonDoneTap": "Done! Tap to open",
+  "buttonTryAgain": "Try Again",
+  "progressStarting": "Starting...",
+  "progressDownloading": "Downloading...",
+  "progressGettingThere": "Getting there...",
+  "progressHalfway": "Halfway!",
+  "progressAlmostDone": "Almost done!",
+  "progressFinishing": "Finishing up...",
+  "advMaxQualityWifi": "Max Quality (WiFi)",
+  "advMaxQualityMobile": "Max Quality (Mobile)",
+  "advSimultaneousDownloads": "Simultaneous Downloads",
+  "advAtATime": "{count} at a time",
+  "@advAtATime": { "placeholders": { "count": { "type": "int" } } },
+  "advDownloadDelay": "Download Delay",
+  "advNoDelay": "No delay",
+  "advSeconds": "{count} seconds",
+  "@advSeconds": { "placeholders": { "count": { "type": "int" } } },
+  "advFragmentsPerDownload": "Fragments per Download",
+  "advCustomUserAgent": "Custom User-Agent",
+  "advDefaultUserAgent": "Use default yt-dlp user-agent",
+  "advProxyUrl": "Proxy URL",
+  "advNoProxy": "No proxy configured",
+  "advSkipDuplicates": "Skip Duplicates",
+  "advSkipDuplicatesSub": "Skip videos you already downloaded",
+  "advAutoRetry": "Auto-Retry Failed",
+  "advAutoRetrySub": "Automatically retry failed downloads",
+  "advSaveToGallery": "Save to Gallery",
+  "advSaveToGallerySub": "Show downloads in your gallery app",
+  "advEmbedSubtitles": "Embed Subtitles",
+  "advEmbedSubtitlesSub": "Embed subtitle track into supported video formats",
+  "advSubtitleLanguage": "Subtitle Language",
+  "advSectionQuality": "Quality",
+  "advSectionPerformance": "Performance",
+  "advSectionNetwork": "Network",
+  "advSectionBehavior": "Behavior",
+  "advSectionSubtitles": "Subtitles",
+  "advFfmpegChecking": "Checking...",
+  "advFfmpegBestQuality": "v{version} - Best quality enabled",
+  "@advFfmpegBestQuality": { "placeholders": { "version": { "type": "String" } } },
+  "advFfmpegPremerged": "Using pre-merged formats",
+  "advNotEnoughStorage": "Not enough storage",
+  "advStorageMessage": "Available: {available}\nRequired: {required}\n\nFree up space and try again.",
+  "@advStorageMessage": { "placeholders": { "available": { "type": "String" }, "required": { "type": "String" } } },
+  "toolsTab": "Tools",
+  "toolsManagerTitle": "Tool Manager",
+  "installTools": "Install tools",
+  "updateTools": "Update tools",
+  "repairTools": "Repair tools",
+  "toolsReady": "Tools ready",
+  "toolsMissing": "Tools missing",
+  "lastUpdated": "Last updated",
+  "versions": "Versions",
+  "setupWizardTitle": "Set up downloader tools",
+  "setupWizardDesc": "Install yt-dlp and FFmpeg once to enable downloads on desktop platforms.",
+  "runSetup": "Run setup",
+  "openToolsManager": "Open Tool Manager",
+  "checkingTools": "Checking tools..."
+}
