@@ -67,7 +67,14 @@ jobs:
         if: matrix.id == 'linux'
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y ninja-build libgtk-3-dev libsecret-1-dev appstream fuse libfuse2
+          sudo apt-get install -y ninja-build libgtk-3-dev libsecret-1-dev appstream fuse libfuse2 patchelf rpm
+
+      - name: Install Fastforge (Linux packaging)
+        if: matrix.id == 'linux'
+        shell: bash
+        run: |
+          dart pub global activate fastforge
+          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
 
       - name: Configure Android signing (stable only)
         if: startsWith(matrix.id, 'android-')
@@ -138,17 +145,21 @@ jobs:
               ;;
             linux)
               tar -czf "dist/${APP_NAME}-${TAG}-linux.tar.gz" -C build/linux/x64/release/bundle .
+              fastforge package --platform linux --targets appimage
+              fastforge package --platform linux --targets deb
+              fastforge package --platform linux --targets rpm
 
-              # Best-effort AppImage packaging (optional)
-              curl -L -o appimagetool.AppImage https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
-              chmod +x appimagetool.AppImage
-              mkdir -p AppDir/usr/bin
-              cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
-              if ./appimagetool.AppImage AppDir "dist/${APP_NAME}-${TAG}.AppImage"; then
-                echo "AppImage created"
-              else
-                echo "AppImage generation failed, continuing with tar.gz"
+              APPIMAGE_FILE="$(find dist -maxdepth 1 -type f -name '*.AppImage' -print -quit)"
+              DEB_FILE="$(find dist -maxdepth 1 -type f -name '*.deb' -print -quit)"
+              RPM_FILE="$(find dist -maxdepth 1 -type f -name '*.rpm' -print -quit)"
+
+              if [ -z "$APPIMAGE_FILE" ] || [ -z "$DEB_FILE" ] || [ -z "$RPM_FILE" ]; then
+                echo "Missing one or more Linux packages (AppImage/DEB/RPM)." && exit 1
               fi
+
+              mv "$APPIMAGE_FILE" "dist/${APP_NAME}-${TAG}-linux.AppImage"
+              mv "$DEB_FILE" "dist/${APP_NAME}-${TAG}-linux.deb"
+              mv "$RPM_FILE" "dist/${APP_NAME}-${TAG}-linux.rpm"
               ;;
             macos)
               APP_BUNDLE="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' -print -quit)"
@@ -300,6 +311,8 @@ jobs:
             dist/*.aab
             dist/*.tar.gz
             dist/*.AppImage
+            dist/*.deb
+            dist/*.rpm
             dist/*.zip
             dist/*.dmg
             dist/*.exe

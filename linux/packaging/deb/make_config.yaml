@@ -1,0 +1,10 @@
+app_id: com.rudraravi.swiftsave
+display_name: SwiftSave
+package_name: swiftsave
+maintainer:
+  name: Rudra Ravi
+  email: rudra-ravi@users.noreply.github.com
+priority: optional
+section: x11
+installed_size: 15700
+essential: false

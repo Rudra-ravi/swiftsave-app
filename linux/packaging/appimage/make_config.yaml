@@ -1,0 +1,13 @@
+app_id: com.rudraravi.swiftsave
+display_name: SwiftSave
+package_name: swiftsave
+icon: web/icons/Icon-512.png
+keywords:
+  - Downloader
+  - Media
+  - Flutter
+generic_name: Media Downloader
+categories:
+  - Utility
+  - Network
+startup_notify: true

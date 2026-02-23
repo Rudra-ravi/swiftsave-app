@@ -17,9 +17,15 @@ This repository uses two workflows:
 ## Published artifacts
 
 - Android: `.apk`, `.aab`
-- Linux: `.tar.gz`, best-effort `.AppImage`
+- Linux: `.tar.gz`, `.AppImage`, `.deb`, `.rpm`
 - Windows: portable `.zip`, installer `.exe`
 - macOS: `.zip`, `.dmg`
+
+Linux package formats (`.AppImage`, `.deb`, `.rpm`) are generated with Fastforge using:
+- `linux/packaging/appimage/make_config.yaml`
+- `linux/packaging/deb/make_config.yaml`
+- `linux/packaging/rpm/make_config.yaml`
+- `distribute_options.yaml`
 
 ## Required secrets
 
