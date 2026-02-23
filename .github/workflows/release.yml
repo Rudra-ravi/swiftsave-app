@@ -154,6 +154,15 @@ jobs:
               ;;
             linux)
               tar -czf "dist/${APP_NAME}-${TAG}-linux.tar.gz" -C build/linux/x64/release/bundle .
+              for required in \
+                linux/packaging/appimage/make_config.yaml \
+                linux/packaging/deb/make_config.yaml \
+                linux/packaging/rpm/make_config.yaml \
+                web/icons/Icon-512.png; do
+                if [ ! -f "$required" ]; then
+                  echo "Missing required Linux packaging input: $required" && exit 1
+                fi
+              done
               fastforge package --platform linux --targets appimage
               fastforge package --platform linux --targets deb
               fastforge package --platform linux --targets rpm

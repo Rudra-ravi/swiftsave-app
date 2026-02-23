@@ -27,6 +27,8 @@ Linux package formats (`.AppImage`, `.deb`, `.rpm`) are generated with Fastforge
 - `linux/packaging/rpm/make_config.yaml`
 - `distribute_options.yaml`
 
+RPM packaging expects an explicit icon path in `linux/packaging/rpm/make_config.yaml` (`icon: web/icons/Icon-512.png`).
+
 ## Required secrets
 
 ### Android stable releases

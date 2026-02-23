@@ -12,6 +12,7 @@
 
 ### Release Packaging
 - If Linux release packaging uses Fastforge AppImage targets, then ensure `appimagetool` is installed on CI and available on `PATH` before running `fastforge package`.
+- If Linux release packaging uses Fastforge RPM targets, then set `icon:` in `linux/packaging/rpm/make_config.yaml` to a real project file path (for example `web/icons/Icon-512.png`).
 
 ### Gradle Safety
 - If aligning Java/Kotlin targets across plugins, then avoid `Project.afterEvaluate` hooks and use project-safe configuration timing (`gradle.projectsEvaluated` or lazy task configuration).
