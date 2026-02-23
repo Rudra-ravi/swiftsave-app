@@ -30,6 +30,7 @@
 
 ### Plugin API Drift
 - If using `flutter_local_notifications` v20+, then call `initialize`/`show` with named parameters (`settings:`, `id:`, `notificationDetails:`) to avoid compile-time failures.
+- If using `flutter_local_notifications` on Linux/macOS/Windows, then include matching desktop `InitializationSettings` entries (`linux`, `macOS`, `windows`) to avoid runtime `ArgumentError` during startup.
 
 ### Localization Gate
 - If adding new UI labels, then add matching ARB keys for `app_en.arb`, `app_es.arb`, and `app_hi.arb` and regenerate l10n before `flutter analyze`.

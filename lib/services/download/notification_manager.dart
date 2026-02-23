@@ -76,8 +76,22 @@ class NotificationManager {
 
   static Future<void> initialize() async {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iOS = DarwinInitializationSettings();
-    const settings = InitializationSettings(android: android, iOS: iOS);
+    const darwin = DarwinInitializationSettings();
+    const linux = LinuxInitializationSettings(
+      defaultActionName: 'Open notification',
+    );
+    const windows = WindowsInitializationSettings(
+      appName: 'SwiftSave',
+      appUserModelId: 'RudraRavi.SwiftSave',
+      guid: 'f5d7d3c8-2063-4f3f-8d5b-71ffca87e032',
+    );
+    const settings = InitializationSettings(
+      android: android,
+      iOS: darwin,
+      macOS: darwin,
+      linux: linux,
+      windows: windows,
+    );
 
     await _localNotifications.initialize(
       settings: settings,
@@ -109,6 +123,9 @@ class NotificationManager {
         ],
       ),
       iOS: DarwinNotificationDetails(),
+      macOS: DarwinNotificationDetails(),
+      linux: LinuxNotificationDetails(defaultActionName: 'Open'),
+      windows: WindowsNotificationDetails(),
     );
 
     await _localNotifications.show(
@@ -161,6 +178,9 @@ class NotificationManager {
         priority: Priority.high,
       ),
       iOS: DarwinNotificationDetails(),
+      macOS: DarwinNotificationDetails(),
+      linux: LinuxNotificationDetails(defaultActionName: 'Open'),
+      windows: WindowsNotificationDetails(),
     );
     await _localNotifications.show(
       id: _openErrorNotificationId,
