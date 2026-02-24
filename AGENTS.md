@@ -44,3 +44,6 @@
 
 ### Small-Screen Layout
 - If adding chips/badges inside constrained `Row` content, then wrap with `Flexible` + `FittedBox(scaleDown)` to prevent `RenderFlex overflow` on narrow widths.
+
+### OSS Documentation
+- If updating `README.md` for public repo polish, then include badges, platform support matrix, quick-start commands, and community/support/security links in the same pass.

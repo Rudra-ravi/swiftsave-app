@@ -1,39 +1,57 @@
-# swiftsave-app
+# SwiftSave
 
-Cross-platform Flutter downloader powered by `yt-dlp` and FFmpeg.
+Cross-platform Flutter media downloader powered by `yt-dlp` and FFmpeg.
 
-Primary targets:
-- Android
-- Linux
-- Windows
-- macOS
+[![CI](https://github.com/Rudra-ravi/swiftsave-app/actions/workflows/ci.yml/badge.svg)](https://github.com/Rudra-ravi/swiftsave-app/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Rudra-ravi/swiftsave-app?sort=semver)](https://github.com/Rudra-ravi/swiftsave-app/releases)
+[![License](https://img.shields.io/github/license/Rudra-ravi/swiftsave-app)](https://github.com/Rudra-ravi/swiftsave-app/blob/main/LICENSE)
 
-## Highlights
+## What It Does
 
-- Unified download engine abstraction (`IDownloadEngine`)
-- Android runtime via native bridge (`plugins/ytdlp_bridge`)
-- Desktop/macOS runtime via process wrapper (`yt-dlp` + FFmpeg)
-- In-app Tool Manager for install/update/repair of desktop tools
-- Queue, retries, background processing on Android
-- GitHub Release artifacts for all primary targets
+SwiftSave provides a unified app experience for downloading media across platforms while keeping platform-specific runtime behavior isolated under engine and tooling layers.
 
-## Project Layout
+Key capabilities:
+- Unified engine contract via `IDownloadEngine`
+- Android runtime through native bridge plugin (`plugins/ytdlp_bridge`)
+- Desktop/macOS runtime via local `yt-dlp` + FFmpeg processes
+- In-app Tool Manager for install, update, and repair workflows
+- Queue/retry/progress orchestration with Android background processing
 
-- `lib/services/engine/`: platform download engines + parser
-- `lib/services/tools/`: registry + tool install/integrity services
-- `lib/screens/tools/`: Tool Manager UI
-- `lib/screens/onboarding/`: first-run setup wizard
-- `plugins/ytdlp_bridge/`: Android bridge and Python runtime integration
+## Platform Support
 
-## Local Development
+| Platform | Status | Runtime Path |
+| --- | --- | --- |
+| Android | Supported | Native plugin bridge + Python runtime integration |
+| Linux | Supported | Process-based `yt-dlp` + FFmpeg |
+| Windows | Supported | Process-based `yt-dlp` + FFmpeg |
+| macOS | Supported | Process-based `yt-dlp` + FFmpeg |
+| iOS | Not currently targeted | N/A |
+
+## Quick Start
+
+### Prerequisites
+
+- Flutter stable
+- Dart SDK (via Flutter)
+- JDK 17 (required for Android build gates)
+- Android SDK (for Android builds/runs)
+
+### Run locally
 
 ```bash
 flutter pub get
+flutter run
+```
+
+### Quality gates
+
+```bash
+dart format --set-exit-if-changed .
 flutter analyze
 flutter test
 ```
 
-### Android gates
+### Android build gates
 
 ```bash
 cd android
@@ -41,7 +59,7 @@ cd android
 ./gradlew :app:assembleDebug
 ```
 
-### Desktop/macOS gates
+### Desktop build gates
 
 ```bash
 flutter build linux --release
@@ -49,21 +67,45 @@ flutter build windows --release
 flutter build macos --release
 ```
 
-## CI/CD
+## Repository Layout
 
-- CI workflow: `.github/workflows/ci.yml`
-  - analyze + tests + linux build gate + android compile/assemble gates
-- Release workflow: `.github/workflows/release.yml`
-  - tag-driven artifacts for Android, Linux, Windows, macOS
-  - prerelease for `vX.Y.Z-rc.N`
-  - stable release for `vX.Y.Z`
-  - optional macOS signing/notarization when secrets are configured
-  - tool-bundle manifest publishing (`tools-manifest.json`)
+- `lib/screens/`, `lib/widgets/`, `lib/viewmodels/`: presentation layer
+- `lib/models/`, `lib/core/interfaces/`: domain contracts and models
+- `lib/services/download/`: orchestration, execution, retries, notifications
+- `lib/services/engine/`: platform download engines + parsing
+- `lib/services/tools/`: tool install/update/integrity services
+- `plugins/ytdlp_bridge/`: Android bridge plugin implementation
+
+Architecture details: see `ARCHITECTURE.md`.
+
+## Releases
+
+Release automation is implemented in `.github/workflows/release.yml`.
+
+- Tag `vX.Y.Z` for stable releases
+- Tag `vX.Y.Z-rc.N` for prereleases
+- Artifacts include Android, Linux, Windows, and macOS packages
+- macOS signing/notarization is applied only when required secrets are configured
+
+## CI
+
+CI is defined in `.github/workflows/ci.yml` and runs:
+- analyze
+- tests
+- Linux build gate
+- Android Kotlin compile and assemble gates
+
+## Community
+
+- Contributing: `CONTRIBUTING.md`
+- Code of Conduct: `CODE_OF_CONDUCT.md`
+- Security Policy: `SECURITY.md`
+- Support: `SUPPORT.md`
 
 ## Responsible Use
 
-You are responsible for legal compliance, copyright compliance, and each platform's terms of service.
+Use this project only in ways that comply with copyright law, local regulations, and platform/service terms.
 
 ## License
 
-MIT. See `LICENSE`.
+MIT License. See `LICENSE`.

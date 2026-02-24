@@ -10,6 +10,8 @@ Report vulnerabilities privately with:
 - Reproduction steps or proof of concept
 - Affected files/components
 - Impact assessment
+- Private GitHub advisory form:
+  `https://github.com/Rudra-ravi/swiftsave-app/security/advisories/new`
 
 If no private contact channel is configured yet, open a minimal GitHub issue
 with title `Security: please provide private contact` and no sensitive details.
