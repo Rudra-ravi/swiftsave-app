@@ -57,7 +57,11 @@ flutter test
 cd android
 ./gradlew :app:compileDebugKotlin
 ./gradlew :app:assembleDebug
+./gradlew :app:assembleDebug --warning-mode all
 ```
+
+Gradle forward-compat note:
+`--warning-mode all` currently reports deprecations from third-party plugin `build.gradle` files in pub cache (Groovy space-assignment syntax). This repository is kept on current stable Gradle/Flutter defaults while plugin maintainers migrate to Gradle 10-compatible syntax.
 
 ### Desktop build gates
 

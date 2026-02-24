@@ -33,5 +33,37 @@ void main() {
       expect(result.isValid, isTrue);
       expect(result.isKnownSite, isFalse);
     });
+
+    test('validate rejects localhost hosts', () {
+      final result = UrlValidatorService.validate('http://localhost:8080/file');
+      expect(result.isValid, isFalse);
+      expect(result.errorMessage, contains('restricted network'));
+    });
+
+    test('validate rejects ipv6 loopback hosts', () {
+      final result = UrlValidatorService.validate('http://[::1]:8080/file');
+      expect(result.isValid, isFalse);
+      expect(result.errorMessage, contains('restricted network'));
+    });
+
+    test('validate rejects ipv6 unique-local hosts', () {
+      final result = UrlValidatorService.validate('http://[fc00::1]/file');
+      expect(result.isValid, isFalse);
+      expect(result.errorMessage, contains('restricted network'));
+    });
+
+    test('validate rejects ipv4-mapped ipv6 private hosts', () {
+      final result = UrlValidatorService.validate(
+        'http://[::ffff:127.0.0.1]/file',
+      );
+      expect(result.isValid, isFalse);
+      expect(result.errorMessage, contains('restricted network'));
+    });
+
+    test('validate allows public ip hosts', () {
+      final result = UrlValidatorService.validate('https://8.8.8.8/resource');
+      expect(result.isValid, isTrue);
+      expect(result.isKnownSite, isFalse);
+    });
   });
 }

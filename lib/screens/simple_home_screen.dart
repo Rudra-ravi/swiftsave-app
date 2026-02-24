@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -253,7 +254,8 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen>
       await Navigator.push<void>(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => PlaylistScreen(playlistInfo: _toPlaylistInfo(mediaInfo)),
+          builder: (_) =>
+              PlaylistScreen(playlistInfo: _toPlaylistInfo(mediaInfo)),
         ),
       );
       return const DownloadDecision(
@@ -283,7 +285,10 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen>
     }
 
     if (mediaInfo.isImage) {
-      return const DownloadDecision(formatId: 'best', mediaType: MediaType.image);
+      return const DownloadDecision(
+        formatId: 'best',
+        mediaType: MediaType.image,
+      );
     }
 
     if (mediaInfo.isAudio) {
@@ -303,7 +308,9 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen>
     }
   }
 
-  Future<DownloadDecision?> _showDownloadDecisionSheet(MediaInfo mediaInfo) async {
+  Future<DownloadDecision?> _showDownloadDecisionSheet(
+    MediaInfo mediaInfo,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final preset1080 = _findProgressiveFormatId(mediaInfo, 1080);
     final preset720 = _findProgressiveFormatId(mediaInfo, 720);
@@ -420,8 +427,8 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen>
                         ),
                         if (showAdvanced)
                           ...exactFormats.take(25).map((format) {
-                            final isAudioOnly = format.isAudioFormat &&
-                                !format.isVideoFormat;
+                            final isAudioOnly =
+                                format.isAudioFormat && !format.isVideoFormat;
                             final subtitle =
                                 '${format.ext.toUpperCase()} • ${format.resolution} • ${format.quality}';
                             return ListTile(
@@ -462,19 +469,19 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen>
   }
 
   String? _findProgressiveFormatId(MediaInfo mediaInfo, int maxHeight) {
-    final progressive = mediaInfo.formats.where((f) {
-      final hasVideo = f.isVideoFormat;
-      final hasAudio = f.isAudioFormat;
-      if (!hasVideo || !hasAudio) return false;
-      final height = _extractFormatHeight(f);
-      if (height == null) return false;
-      return height <= maxHeight;
-    }).toList()
-      ..sort((a, b) {
-        final ah = _extractFormatHeight(a) ?? 0;
-        final bh = _extractFormatHeight(b) ?? 0;
-        return bh.compareTo(ah);
-      });
+    final progressive =
+        mediaInfo.formats.where((f) {
+          final hasVideo = f.isVideoFormat;
+          final hasAudio = f.isAudioFormat;
+          if (!hasVideo || !hasAudio) return false;
+          final height = _extractFormatHeight(f);
+          if (height == null) return false;
+          return height <= maxHeight;
+        }).toList()..sort((a, b) {
+          final ah = _extractFormatHeight(a) ?? 0;
+          final bh = _extractFormatHeight(b) ?? 0;
+          return bh.compareTo(ah);
+        });
 
     if (progressive.isEmpty) return null;
     return progressive.first.formatId;
@@ -663,9 +670,10 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen>
                       // Shimmer loading skeleton during fetch
                       if (vm.buttonState == DownloadButtonState.fetching &&
                           vm.fetchedTitle == null)
-                        _buildShimmerCard(context, isDark)
-                            .animate()
-                            .fadeIn(duration: 300.ms),
+                        _buildShimmerCard(
+                          context,
+                          isDark,
+                        ).animate().fadeIn(duration: 300.ms),
 
                       if (vm.buttonState == DownloadButtonState.fetching &&
                           vm.fetchedTitle == null)
@@ -695,12 +703,13 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen>
                                             12,
                                           ),
                                           child: vm.fetchedThumbnail != null
-                                              ? Image.network(
-                                                  vm.fetchedThumbnail!,
+                                              ? CachedNetworkImage(
+                                                  imageUrl:
+                                                      vm.fetchedThumbnail!,
                                                   width: 100,
                                                   height: 70,
                                                   fit: BoxFit.cover,
-                                                  errorBuilder: (_, _, _) =>
+                                                  errorWidget: (_, _, _) =>
                                                       _buildPlaceholderThumb(),
                                                 )
                                               : _buildPlaceholderThumb(),
@@ -742,12 +751,14 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen>
                                                       ),
                                                       child: Text(
                                                         l10n.bestQuality,
-                                                        style: SimpleTheme.caption(
-                                                          context,
-                                                          color: Colors.white,
-                                                        ).copyWith(
-                                                          fontSize: 11,
-                                                        ),
+                                                        style:
+                                                            SimpleTheme.caption(
+                                                              context,
+                                                              color:
+                                                                  Colors.white,
+                                                            ).copyWith(
+                                                              fontSize: 11,
+                                                            ),
                                                       ),
                                                     ),
                                                   ),

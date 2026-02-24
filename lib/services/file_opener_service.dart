@@ -1,11 +1,22 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:media_scanner/media_scanner.dart';
 
 /// Service for opening downloaded files and making them visible in gallery
 class FileOpenerService {
+  @visibleForTesting
+  static Future<void> Function(String filePath)? scanFileOverride;
+
+  @visibleForTesting
+  static Future<OpenResult> Function(String filePath)? openFileOverride;
+
   /// Open a file with the system's default app
   static Future<OpenResult> openFile(String filePath) async {
+    if (openFileOverride != null) {
+      return openFileOverride!(filePath);
+    }
+
     final file = File(filePath);
     if (!file.existsSync()) {
       return OpenResult(
@@ -25,6 +36,11 @@ class FileOpenerService {
   /// already handles.  We skip the scan for those paths to avoid the harmless
   /// but noisy "Scanned ... to null" log.
   static Future<void> scanFile(String filePath) async {
+    if (scanFileOverride != null) {
+      await scanFileOverride!(filePath);
+      return;
+    }
+
     final file = File(filePath);
     if (!file.existsSync()) return;
 
@@ -40,8 +56,10 @@ class FileOpenerService {
 
   /// Open a file and also ensure it's visible in gallery
   static Future<OpenResult> openAndScan(String filePath) async {
-    // Scan first to ensure it's in gallery
-    await scanFile(filePath);
+    try {
+      // Best effort scan; opening should still proceed if scan fails.
+      await scanFile(filePath);
+    } catch (_) {}
 
     // Then open with default app
     return await openFile(filePath);
@@ -66,5 +84,11 @@ class FileOpenerService {
   /// Check if result indicates success
   static bool isSuccess(OpenResult result) {
     return result.type == ResultType.done;
+  }
+
+  @visibleForTesting
+  static void resetOverrides() {
+    scanFileOverride = null;
+    openFileOverride = null;
   }
 }

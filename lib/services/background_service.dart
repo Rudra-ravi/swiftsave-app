@@ -6,6 +6,7 @@ import '../models/download_status.dart';
 import '../models/download_task.dart';
 import '../services/engine/download_engine_provider.dart';
 import '../services/ffmpeg_service.dart';
+import '../services/flutter_ffmpeg_service.dart';
 import '../services/queue_service.dart';
 import '../services/settings_service.dart';
 import '../utils/app_logger.dart';
@@ -215,6 +216,12 @@ class BackgroundDownloadService {
           await DownloadEngineProvider.instance.cancelDownload(taskId);
         } catch (e) {
           AppLogger.error('Failed to cancel python download', error: e);
+        }
+
+        try {
+          await FlutterFFmpegService.instance.cancelTask(taskId);
+        } catch (e) {
+          AppLogger.error('Failed to cancel FFmpeg merge', error: e);
         }
       }
     });

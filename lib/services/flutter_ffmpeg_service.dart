@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit_config.dart';
+import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_session.dart';
 import 'package:ffmpeg_kit_flutter_new_min_gpl/return_code.dart';
 import 'package:ffmpeg_kit_flutter_new_min_gpl/statistics.dart';
+import 'package:ffmpeg_kit_flutter_new_min_gpl/statistics_callback.dart';
 
 /// FFmpeg service using ffmpeg_kit_flutter for Android
 /// Handles video/audio merging that yt-dlp can't do without binary FFmpeg
@@ -16,9 +18,24 @@ class FlutterFFmpegService {
 
   bool _initialized = false;
   String? _version;
+  final Map<String, int> _activeSessionIds = <String, int>{};
+  bool? _availabilityOverrideForTest;
+
+  @visibleForTesting
+  Future<FFmpegSession> Function(
+    String, [
+    void Function(FFmpegSession)?,
+    void Function(dynamic)?,
+    StatisticsCallback?,
+  ])
+  executeAsyncRunner = FFmpegKit.executeAsync;
+
+  @visibleForTesting
+  Future<void> Function([int?]) cancelRunner = FFmpegKit.cancel;
 
   /// Whether FFmpegKit is available (Android only)
-  bool get isAvailable => Platform.isAndroid && _initialized;
+  bool get isAvailable =>
+      _availabilityOverrideForTest ?? (Platform.isAndroid && _initialized);
 
   /// FFmpeg version from FFmpegKit
   String? get version => _version;
@@ -62,6 +79,7 @@ class FlutterFFmpegService {
   /// Merge video and audio files into a single MP4
   /// Returns the output file path on success, throws on failure
   Future<String> mergeVideoAudio({
+    required String taskId,
     required String videoPath,
     required String audioPath,
     required String outputPath,
@@ -98,19 +116,38 @@ class FlutterFFmpegService {
     final command =
         '-i "$videoPath" -i "$audioPath" -c:v copy -c:a aac -strict experimental -shortest "$outputPath"';
 
-    // Enable statistics callback for progress
-    if (onProgress != null && totalDurationMs != null) {
-      FFmpegKitConfig.enableStatisticsCallback((Statistics statistics) {
-        final timeMs = statistics.getTime();
-        if (timeMs > 0 && totalDurationMs > 0) {
-          final progress = (timeMs / totalDurationMs).clamp(0.0, 1.0);
-          onProgress(progress);
-        }
-      });
-    }
-
+    final bool enableStatistics = shouldEnableStatistics(
+      onProgress: onProgress,
+      totalDurationMs: totalDurationMs,
+    );
+    final statsCallback = enableStatistics
+        ? (Statistics statistics) {
+            final timeMs = statistics.getTime();
+            if (timeMs > 0 && totalDurationMs! > 0) {
+              final progress = (timeMs / totalDurationMs).clamp(0.0, 1.0);
+              onProgress!(progress);
+            }
+          }
+        : null;
     try {
-      final session = await FFmpegKit.execute(command);
+      final completed = Completer<void>();
+      final session = await executeAsyncRunner(
+        command,
+        (_) {
+          if (!completed.isCompleted) {
+            completed.complete();
+          }
+        },
+        null,
+        statsCallback,
+      );
+
+      final sessionId = session.getSessionId();
+      if (sessionId != null) {
+        _activeSessionIds[taskId] = sessionId;
+      }
+
+      await completed.future;
       final returnCode = await session.getReturnCode();
 
       if (ReturnCode.isSuccess(returnCode)) {
@@ -132,14 +169,22 @@ class FlutterFFmpegService {
         );
       }
     } finally {
-      // Disable statistics callback
-      FFmpegKitConfig.enableStatisticsCallback(null);
+      _activeSessionIds.remove(taskId);
     }
   }
 
   /// Cancel any running FFmpeg operation
   Future<void> cancel() async {
-    await FFmpegKit.cancel();
+    await cancelRunner();
+  }
+
+  /// Cancel FFmpeg operation associated with a specific task.
+  Future<void> cancelTask(String taskId) async {
+    final sessionId = _activeSessionIds.remove(taskId);
+    if (sessionId == null) {
+      return;
+    }
+    await cancelRunner(sessionId);
   }
 
   /// Clean up temporary video/audio files after successful merge
@@ -175,5 +220,36 @@ class FlutterFFmpegService {
       // Without FFmpegKit, prefer pre-merged formats
       return 'best[ext=mp4][height<=$heightLimit]/best[height<=$heightLimit]/best';
     }
+  }
+
+  @visibleForTesting
+  static bool shouldEnableStatistics({
+    void Function(double progress)? onProgress,
+    int? totalDurationMs,
+  }) {
+    return onProgress != null && totalDurationMs != null && totalDurationMs > 0;
+  }
+
+  @visibleForTesting
+  void trackSessionForTest(String taskId, int sessionId) {
+    _activeSessionIds[taskId] = sessionId;
+  }
+
+  @visibleForTesting
+  bool hasActiveSessionForTest(String taskId) {
+    return _activeSessionIds.containsKey(taskId);
+  }
+
+  @visibleForTesting
+  void resetTestingHooks() {
+    executeAsyncRunner = FFmpegKit.executeAsync;
+    cancelRunner = FFmpegKit.cancel;
+    _activeSessionIds.clear();
+    _availabilityOverrideForTest = null;
+  }
+
+  @visibleForTesting
+  void setAvailableForTest(bool value) {
+    _availabilityOverrideForTest = value;
   }
 }

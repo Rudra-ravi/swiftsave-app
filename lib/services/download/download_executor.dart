@@ -295,29 +295,26 @@ class DownloadExecutor {
         '[DownloadExecutor] Merging video and audio with FFmpegKit',
       );
 
-      await _notificationManager.show('Merging video and audio...', task.title);
+      await _notificationManager.show('Merging started', task.title);
 
       final videoFileName = videoFile.split('/').last;
       final baseName = videoFileName.replaceAll(RegExp(r'\.[^.]+$'), '');
       final outputPath = '${task.outputPath}/${baseName}_merged.mp4';
 
       final mergedPath = await flutterFFmpeg.mergeVideoAudio(
+        taskId: task.id,
         videoPath: videoFile,
         audioPath: audioFile,
         outputPath: outputPath,
-        onProgress: (progress) {
-          _notificationManager.show(
-            'Merging... ${(progress * 100).toStringAsFixed(0)}%',
-            task.title,
-          );
-        },
       );
 
       AppLogger.debug('[DownloadExecutor] Merge successful: $mergedPath');
+      await _notificationManager.show('Merging complete', task.title);
       await flutterFFmpeg.cleanupTempFiles(videoFile, audioFile);
 
       return mergedPath;
     } catch (e) {
+      await _notificationManager.show('Merging failed', task.title);
       AppLogger.error('[DownloadExecutor] FFmpegKit merge failed', error: e);
       return null;
     }
